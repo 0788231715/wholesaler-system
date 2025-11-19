@@ -1,14 +1,21 @@
 const Order = require('../models/order.model');
 const Product = require('../models/product.model');
 const Invoice = require('../models/invoice.model');
+<<<<<<< HEAD
 const sendEmail = require('../utils/email');
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
 // @desc    Create new order
 // @route   POST /api/v1/orders
 // @access  Private/Retailer
 exports.createOrder = async (req, res) => {
   try {
+<<<<<<< HEAD
     const { items, shippingAddress, notes, paymentIntentId } = req.body;
+=======
+    const { items, shippingAddress, notes } = req.body;
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -17,6 +24,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
     if (!paymentIntentId) {
       return res.status(400).json({
         success: false,
@@ -24,6 +32,8 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     let totalAmount = 0;
     const orderItems = [];
 
@@ -38,6 +48,16 @@ exports.createOrder = async (req, res) => {
         });
       }
 
+<<<<<<< HEAD
+=======
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for product: ${product.name}. Available: ${product.stock}`
+        });
+      }
+
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       if (!product.isActive) {
         return res.status(400).json({
           success: false,
@@ -45,6 +65,7 @@ exports.createOrder = async (req, res) => {
         });
       }
 
+<<<<<<< HEAD
       let price;
       let stock;
       let variant = null;
@@ -78,13 +99,21 @@ exports.createOrder = async (req, res) => {
       }
 
       const itemTotal = price * item.quantity;
+=======
+      const itemTotal = product.price * item.quantity;
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       totalAmount += itemTotal;
 
       orderItems.push({
         product: product._id,
+<<<<<<< HEAD
         variant: variant ? variant._id : null,
         quantity: item.quantity,
         price: price,
+=======
+        quantity: item.quantity,
+        price: product.price,
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
         total: itemTotal
       });
     }
@@ -95,6 +124,7 @@ exports.createOrder = async (req, res) => {
       items: orderItems,
       totalAmount,
       shippingAddress,
+<<<<<<< HEAD
       notes,
       paymentIntentId,
       paymentStatus: 'pending'
@@ -111,11 +141,23 @@ exports.createOrder = async (req, res) => {
         product.stock -= item.quantity;
         await product.save();
       }
+=======
+      notes
+    });
+
+    // Update product stock
+    for (const item of items) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: -item.quantity } }
+      );
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     }
 
     await order.populate('retailer', 'name company email');
     await order.populate('items.product', 'name description images');
 
+<<<<<<< HEAD
     // Send order confirmation email
     try {
       await sendEmail({
@@ -127,6 +169,8 @@ exports.createOrder = async (req, res) => {
       console.error('There was an error sending the order confirmation email:', emailError);
     }
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
@@ -206,7 +250,11 @@ exports.getOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('retailer', 'name company email phone address')
+<<<<<<< HEAD
       .populate('items.product', 'name description price images producer hasVariants variants')
+=======
+      .populate('items.product', 'name description price images producer')
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       .populate('assignedTo', 'name email');
 
     if (!order) {
@@ -243,7 +291,11 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, estimatedDelivery, notes } = req.body;
 
+<<<<<<< HEAD
     const order = await Order.findById(req.params.id).populate('retailer', 'email name');
+=======
+    const order = await Order.findById(req.params.id);
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
     if (!order) {
       return res.status(404).json({
@@ -264,6 +316,7 @@ exports.updateOrderStatus = async (req, res) => {
 
     await order.save();
 
+<<<<<<< HEAD
     await order.populate('items.product', 'name price images');
 
     // Send order status update email
@@ -278,6 +331,11 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
 
+=======
+    await order.populate('retailer', 'name company email');
+    await order.populate('items.product', 'name price images');
+
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     res.json({
       success: true,
       message: 'Order status updated successfully',
@@ -332,7 +390,11 @@ exports.assignOrder = async (req, res) => {
 // @access  Private
 exports.cancelOrder = async (req, res) => {
   try {
+<<<<<<< HEAD
     const order = await Order.findById(req.params.id).populate('retailer', 'email name');
+=======
+    const order = await Order.findById(req.params.id);
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
     if (!order) {
       return res.status(404).json({
@@ -350,7 +412,11 @@ exports.cancelOrder = async (req, res) => {
     }
 
     // Only allow cancellation for pending or processing orders
+<<<<<<< HEAD
     if (!['pending', 'processing'].includes(order..status)) {
+=======
+    if (!['pending', 'processing'].includes(order.status)) {
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       return res.status(400).json({
         success: false,
         message: `Cannot cancel order with status: ${order.status}`
@@ -359,6 +425,7 @@ exports.cancelOrder = async (req, res) => {
 
     // Restore product stock
     for (const item of order.items) {
+<<<<<<< HEAD
         const product = await Product.findById(item.product);
         if (product.hasVariants) {
             const variant = product.variants.id(item.variant);
@@ -368,11 +435,18 @@ exports.cancelOrder = async (req, res) => {
             product.stock += item.quantity;
             await product.save();
         }
+=======
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: item.quantity } }
+      );
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     }
 
     order.status = 'cancelled';
     await order.save();
 
+<<<<<<< HEAD
     // Send order cancellation email
     try {
         await sendEmail({
@@ -384,6 +458,8 @@ exports.cancelOrder = async (req, res) => {
         console.error('There was an error sending the order cancellation email:', emailError);
     }
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     res.json({
       success: true,
       message: 'Order cancelled successfully',

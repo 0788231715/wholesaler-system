@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 const crypto = require('crypto');
 const User = require('../models/user.model');
 const sendEmail = require('../utils/email');
+=======
+const User = require('../models/user.model');
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 const { generateToken } = require('../middlewares/auth.middleware');
 
 // @desc    Register user
@@ -11,13 +15,19 @@ exports.register = async (req, res) => {
     const { name, email, password, role, company, phone, address } = req.body;
 
     // Check if user exists
+<<<<<<< HEAD
     let user = await User.findOne({ email });
     if (user && user.isVerified) {
+=======
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       return res.status(400).json({
         success: false,
         message: 'User already exists with this email'
       });
     }
+<<<<<<< HEAD
     
     // If user exists but is not verified, delete the old record
     if (user && !user.isVerified) {
@@ -26,6 +36,11 @@ exports.register = async (req, res) => {
 
     // Create user
     user = await User.create({
+=======
+
+    // Create user
+    const user = await User.create({
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       name,
       email,
       password,
@@ -35,6 +50,7 @@ exports.register = async (req, res) => {
       address
     });
 
+<<<<<<< HEAD
     // Generate verification token
     const verificationToken = user.createVerificationToken();
     await user.save({ validateBeforeSave: false });
@@ -63,6 +79,24 @@ exports.register = async (req, res) => {
         message: 'There was an error sending the verification email. Please try again later.'
       });
     }
+=======
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          company: user.company
+        },
+        token
+      }
+    });
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -71,6 +105,7 @@ exports.register = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // @desc    Verify email
 // @route   GET /api/v1/auth/verifyemail/:token
 // @access  Public
@@ -122,6 +157,8 @@ exports.verifyEmail = async (req, res) => {
 };
 
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 // @desc    Login user
 // @route   POST /api/v1/auth/login
 // @access  Public
@@ -146,6 +183,7 @@ exports.login = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
     if (!user.isVerified) {
         return res.status(401).json({
             success: false,
@@ -153,6 +191,8 @@ exports.login = async (req, res) => {
         });
     }
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -184,6 +224,7 @@ exports.login = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // @desc    Forgot password
 // @route   POST /api/v1/auth/forgotpassword
 // @access  Public
@@ -290,6 +331,8 @@ exports.resetPassword = async (req, res) => {
 };
 
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 // @desc    Get current logged in user
 // @route   GET /api/v1/auth/me
 // @access  Private

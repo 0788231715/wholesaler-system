@@ -5,9 +5,12 @@ export const authAPI = {
   register: (userData) => api.post('/v1/auth/register', userData),
   getMe: () => api.get('/v1/auth/me'),
   updateDetails: (userData) => api.put('/v1/auth/updatedetails', userData),
+<<<<<<< HEAD
   forgotPassword: (email) => api.post('/v1/auth/forgotpassword', email),
   resetPassword: (token, passwordData) => api.patch(`/v1/auth/resetpassword/${token}`, passwordData),
   verifyEmail: (token) => api.get(`/v1/auth/verifyemail/${token}`),
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 };
 
 export const userAPI = {
@@ -62,8 +65,11 @@ export const reportAPI = {
   getProducerPerformance: () => api.get('/v1/reports/producers/performance'),
   getFinancialSummary: () => api.get('/v1/reports/financial/summary'),
   getMonthlyRevenue: (year) => api.get('/v1/reports/revenue/monthly', { params: { year } }),
+<<<<<<< HEAD
 };
 
 export const paymentAPI = {
   createPaymentIntent: (paymentData) => api.post('/v1/payment/create-payment-intent', paymentData),
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 };

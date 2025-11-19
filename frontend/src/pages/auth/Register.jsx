@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -9,6 +10,21 @@ import Button from '../../components/common/Button';
 
 const Register = () => {
   const navigate = useNavigate();
+=======
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
+import Input from '../../components/common/Input';
+import Button from '../../components/common/Button';
+import { useAuthStore } from '../../stores/authStore';
+
+const Register = () => {
+  const [loading, setLoading] = useState(false);
+  const { register: registerUser } = useAuthStore();
+  const navigate = useNavigate();
+  
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   const { register, handleSubmit, formState: { errors }, watch } = useForm({
     defaultValues: {
       name: '',
@@ -21,6 +37,7 @@ const Register = () => {
     }
   });
 
+<<<<<<< HEAD
   const mutation = useMutation(
     (data) => authAPI.register(data),
     {
@@ -43,6 +60,63 @@ const Register = () => {
       zipCode: ''
     };
     mutation.mutate(registerData);
+=======
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+      // Remove confirmPassword before sending to API
+      const { confirmPassword, ...registerData } = data;
+      
+      // Add address object structure expected by backend
+      registerData.address = {
+        street: registerData.address || '',
+        city: '',
+        state: '',
+        zipCode: ''
+      };
+      
+      console.log('📤 Sending registration data:', JSON.stringify(registerData, null, 2));
+      
+      // Get the auth store register function
+      const { register: registerUser } = useAuthStore.getState();
+      
+      // Attempt registration
+      const result = await registerUser(registerData);
+      
+      if (result.success) {
+        console.log('✅ Registration successful:', result);
+        toast.success('Registration successful! Redirecting to dashboard...');
+        setTimeout(() => navigate('/dashboard'), 1500);
+      } else {
+        console.error('❌ Registration failed:', result);
+        // Show more specific error message
+        if (result.message.includes('exists')) {
+          toast.error('Email already registered. Please try logging in or use a different email.');
+        } else {
+          toast.error(result.message || 'Registration failed. Please check all fields and try again.');
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Registration error details:', {
+        response: error.response?.data,
+        status: error.response?.status,
+        error: error.message
+      });
+      
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        toast.error('Please check your registration details. All required fields must be filled.');
+      } else if (error.response?.status === 409) {
+        toast.error('This email is already registered. Please try logging in instead.');
+      } else if (error.response?.status === 422) {
+        toast.error('Invalid input. Please check all fields are correctly filled.');
+      } else {
+        toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   };
 
   return (
@@ -133,7 +207,11 @@ const Register = () => {
           })}
         />
 
+<<<<<<< HEAD
         <Button type="submit" loading={mutation.isLoading} className="w-full">
+=======
+        <Button type="submit" loading={loading} className="w-full">
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
           Create Account
         </Button>
       </form>

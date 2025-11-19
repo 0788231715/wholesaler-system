@@ -7,20 +7,29 @@ import { useAuthStore } from './stores/authStore';
 // Layout Components
 import Layout from './components/layout/Layout';
 import AuthLayout from './components/layout/AuthLayout';
+<<<<<<< HEAD
 import PublicLayout from './components/layout/PublicLayout';
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+<<<<<<< HEAD
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import PleaseVerifyEmail from './pages/auth/PleaseVerifyEmail';
 import EmailVerification from './pages/auth/EmailVerification';
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
 // Dashboard Pages
 import Dashboard from './pages/dashboard/Dashboard';
 import Products from './pages/products/Products';
+<<<<<<< HEAD
 import PublicProducts from './pages/products/PublicProducts';
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 import Orders from './pages/orders/Orders';
 import Chat from './pages/chat/Chat';
 import Invoices from './pages/invoices/Invoices';
@@ -37,7 +46,11 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+<<<<<<< HEAD
     return <Navigate to="/app/dashboard" replace />;
+=======
+    return <Navigate to="/dashboard" replace />;
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   }
 
   return children;
@@ -47,7 +60,11 @@ function PublicRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
   
   if (isAuthenticated()) {
+<<<<<<< HEAD
     return <Navigate to="/app/dashboard" replace />;
+=======
+    return <Navigate to="/dashboard" replace />;
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   }
 
   return children;
@@ -74,6 +91,7 @@ function App() {
         <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Public Routes */}
+<<<<<<< HEAD
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<PublicProducts />} />
             </Route>
@@ -100,6 +118,77 @@ function App() {
 
             {/* 404 Page */}
             <Route path="*" element={<Navigate to="/" replace />} />
+=======
+            <Route path="/login" element={
+              <PublicRoute>
+                <AuthLayout>
+                  <Login />
+                </AuthLayout>
+              </PublicRoute>
+            } />
+            <Route path="/register" element={
+              <PublicRoute>
+                <AuthLayout>
+                  <Register />
+                </AuthLayout>
+              </PublicRoute>
+            } />
+
+            {/* Protected Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              
+              {/* Products */}
+              <Route path="products" element={
+                <ProtectedRoute allowedRoles={['admin', 'producer', 'manager', 'retailer']}>
+                  <Products />
+                </ProtectedRoute>
+              } />
+              
+              {/* Orders */}
+              <Route path="orders" element={
+                <ProtectedRoute allowedRoles={['admin', 'manager', 'retailer', 'producer']}>
+                  <Orders />
+                </ProtectedRoute>
+              } />
+              
+              {/* Chat */}
+              <Route path="chat" element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              } />
+              
+              {/* Invoices */}
+              <Route path="invoices" element={
+                <ProtectedRoute allowedRoles={['admin', 'manager', 'retailer']}>
+                  <Invoices />
+                </ProtectedRoute>
+              } />
+              
+              {/* Reports */}
+              <Route path="reports" element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <Reports />
+                </ProtectedRoute>
+              } />
+              
+              {/* Users (Admin only) */}
+              <Route path="users" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Users />
+                </ProtectedRoute>
+              } />
+            </Route>
+
+            {/* 404 Page */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
           </Routes>
           <Toaster position="top-right" />
         </div>

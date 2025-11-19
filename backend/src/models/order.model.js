@@ -6,9 +6,12 @@ const orderItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
+<<<<<<< HEAD
   variant: {
     type: mongoose.Schema.Types.ObjectId,
   },
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   quantity: {
     type: Number,
     required: true,
@@ -43,6 +46,7 @@ const orderSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+<<<<<<< HEAD
   paymentIntentId: {
     type: String,
   },
@@ -51,6 +55,8 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'succeeded', 'failed'],
     default: 'pending',
   },
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   status: {
     type: String,
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
@@ -76,7 +82,11 @@ const orderSchema = new mongoose.Schema({
 
 // Generate order number before saving
 orderSchema.pre('save', async function(next) {
+<<<<<<< HEAD
   if (this.isNew && !this.orderNumber) {
+=======
+  if (this.isNew) {
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     const count = await mongoose.model('Order').countDocuments();
     this.orderNumber = `ORD${String(count + 1).padStart(6, '0')}`;
   }

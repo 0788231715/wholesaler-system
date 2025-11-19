@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+<<<<<<< HEAD
 import { Plus, Search, Edit, Trash2, Package, Layers } from 'lucide-react';
+=======
+import { Plus, Search, Edit, Trash2, Package } from 'lucide-react';
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 import { toast } from 'react-hot-toast';
 import { productAPI } from '../../api/auth';
 import { useAuthStore } from '../../stores/authStore';
@@ -52,6 +56,7 @@ const Products = () => {
     setEditingProduct(null);
   };
 
+<<<<<<< HEAD
   const getPriceRange = (product) => {
     if (!product.hasVariants || product.variants.length === 0) {
       return `${product.price?.toFixed(2)}`;
@@ -65,6 +70,8 @@ const Products = () => {
     return `${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}`;
   };
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -123,8 +130,13 @@ const Products = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products?.data?.map((product) => (
+<<<<<<< HEAD
             <div key={product._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
               <div className="h-48 bg-gray-200 flex items-center justify-center relative">
+=======
+            <div key={product._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="h-48 bg-gray-200 flex items-center justify-center">
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
                 {product.images?.[0] ? (
                   <img 
                     src={product.images[0].url} 
@@ -134,6 +146,7 @@ const Products = () => {
                 ) : (
                   <Package className="text-gray-400" size={48} />
                 )}
+<<<<<<< HEAD
                 {product.hasVariants && (
                   <div className="absolute top-2 right-2 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center">
                     <Layers size={12} className="mr-1" />
@@ -166,6 +179,30 @@ const Products = () => {
                     title={product.hasVariants ? "Select options on product page" : ""}
                   >
                     {product.hasVariants ? 'View Options' : 'Add to Cart'}
+=======
+              </div>
+              
+              <div className="p-4">
+                <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
+                
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-lg font-bold text-gray-900">
+                    ${product.price}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    product.stock > 10 ? 'bg-green-100 text-green-800' :
+                    product.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {product.stock} in stock
+                  </span>
+                </div>
+
+                {user?.role === 'retailer' && product.stock > 0 && (
+                  <Button className="w-full mt-4">
+                    Add to Cart
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
                   </Button>
                 )}
 

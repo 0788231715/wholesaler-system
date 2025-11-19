@@ -36,10 +36,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+<<<<<<< HEAD
 // Stripe Webhook
 // This route must be before express.json() to receive the raw body
 app.use('/api/v1/webhook', require('./routes/v1/webhook.routes'));
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -55,8 +58,11 @@ app.use('/api/v1/orders', require('./routes/v1/order.routes'));
 app.use('/api/v1/chat', require('./routes/v1/chat.routes'));
 app.use('/api/v1/invoices', require('./routes/v1/invoice.routes'));
 app.use('/api/v1/reports', require('./routes/v1/report.routes'));
+<<<<<<< HEAD
 app.use('/api/v1/cart', require('./routes/v1/cart.routes'));
 app.use('/api/v1/payment', require('./routes/v1/payment.routes'));
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
 // Health check route
 app.get('/api/health', (req, res) => {

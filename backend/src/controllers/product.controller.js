@@ -18,17 +18,36 @@ exports.getProducts = async (req, res) => {
 
     let query = { isActive: true };
 
+<<<<<<< HEAD
     if (category) query.category = category;
     if (producer) query.producer = producer;
 
     // NOTE: Price and stock filtering is not performant on large datasets with variants
     // and should be implemented with an aggregation pipeline for production environments.
+=======
+    // Filter by category
+    if (category) query.category = category;
+
+    // Filter by producer
+    if (producer) query.producer = producer;
+
+    // Filter by price range
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
+<<<<<<< HEAD
+=======
+    // Filter by stock availability
+    if (inStock === 'true') {
+      query.stock = { $gt: 0 };
+    }
+
+    // Search in name and description
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -36,22 +55,39 @@ exports.getProducts = async (req, res) => {
       ];
     }
 
+<<<<<<< HEAD
+=======
+    // For retailers, only show products with stock > 0
+    if (req.user.role === 'retailer') {
+      query.stock = { $gt: 0 };
+    }
+
+    // For producers, only show their products
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (req.user.role === 'producer') {
       query.producer = req.user.id;
     }
 
+<<<<<<< HEAD
     let products = await Product.find(query)
+=======
+    const products = await Product.find(query)
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       .populate('producer', 'name company')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
 
+<<<<<<< HEAD
     // Post-query filtering for stock. This is not ideal for pagination.
     if (inStock === 'true' || req.user.role === 'retailer') {
       products = products.filter(p => p.totalStock > 0);
     }
 
     const total = await Product.countDocuments(query); // This total count is now inaccurate due to post-filtering.
+=======
+    const total = await Product.countDocuments(query);
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
     res.json({
       success: true,
@@ -99,10 +135,15 @@ exports.getProduct = async (req, res) => {
 // @access  Private/Admin/Producer
 exports.createProduct = async (req, res) => {
   try {
+<<<<<<< HEAD
+=======
+    // Set producer to current user if not admin
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (req.user.role === 'producer') {
       req.body.producer = req.user.id;
     }
 
+<<<<<<< HEAD
     const { hasVariants, variants } = req.body;
 
     if (hasVariants && (!variants || variants.length === 0)) {
@@ -112,6 +153,8 @@ exports.createProduct = async (req, res) => {
       });
     }
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     const product = await Product.create(req.body);
 
     await product.populate('producer', 'name company');
@@ -143,12 +186,17 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
+=======
+    // Check if producer owns the product (unless admin)
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (req.user.role === 'producer' && product.producer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this product'
       });
     }
+<<<<<<< HEAD
     
     const { hasVariants, variants } = req.body;
 
@@ -158,6 +206,8 @@ exports.updateProduct = async (req, res) => {
         message: 'Product with variants must have at least one variant.'
       });
     }
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
     product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -195,6 +245,10 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
+=======
+    // Check if producer owns the product (unless admin)
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (req.user.role === 'producer' && product.producer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -202,6 +256,10 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
+=======
+    // Soft delete by setting isActive to false
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     await Product.findByIdAndUpdate(req.params.id, { isActive: false });
 
     res.json({
@@ -221,6 +279,7 @@ exports.deleteProduct = async (req, res) => {
 // @access  Private/Admin/Producer
 exports.updateStock = async (req, res) => {
   try {
+<<<<<<< HEAD
     const { stock, variantId } = req.body;
     const { id } = req.params;
 
@@ -232,6 +291,11 @@ exports.updateStock = async (req, res) => {
     }
 
     const product = await Product.findById(id);
+=======
+    const { stock } = req.body;
+
+    const product = await Product.findById(req.params.id);
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
     if (!product) {
       return res.status(404).json({
@@ -240,6 +304,10 @@ exports.updateStock = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
+=======
+    // Check if producer owns the product (unless admin)
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (req.user.role === 'producer' && product.producer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -247,6 +315,7 @@ exports.updateStock = async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
     if (product.hasVariants) {
       if (!variantId) {
         return res.status(400).json({
@@ -266,6 +335,9 @@ exports.updateStock = async (req, res) => {
       product.stock = stock;
     }
 
+=======
+    product.stock = stock;
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     await product.save();
 
     res.json({

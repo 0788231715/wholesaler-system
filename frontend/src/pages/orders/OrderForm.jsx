@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Plus, Minus, X, ShoppingCart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+<<<<<<< HEAD
 import { productAPI, orderAPI, paymentAPI } from '../../api/auth';
 import { useAuthStore } from '../../stores/authStore';
 import Input from '../../components/common/Input';
@@ -11,6 +12,12 @@ import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from '../../components/payment/CheckoutForm';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+=======
+import { productAPI, orderAPI } from '../../api/auth';
+import { useAuthStore } from '../../stores/authStore';
+import Input from '../../components/common/Input';
+import Button from '../../components/common/Button';
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
 const OrderForm = ({ onSuccess, onCancel }) => {
   const [cart, setCart] = useState([]);
@@ -24,8 +31,11 @@ const OrderForm = ({ onSuccess, onCancel }) => {
   const [notes, setNotes] = useState('');
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+<<<<<<< HEAD
   const [clientSecret, setClientSecret] = useState('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 
   const { data: products } = useQuery(
     'products-for-order',
@@ -46,6 +56,7 @@ const OrderForm = ({ onSuccess, onCancel }) => {
     }
   );
 
+<<<<<<< HEAD
   const createPaymentIntentMutation = useMutation(
     (paymentData) => paymentAPI.createPaymentIntent(paymentData),
     {
@@ -59,6 +70,8 @@ const OrderForm = ({ onSuccess, onCancel }) => {
     }
   );
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   const addToCart = (product) => {
     const existingItem = cart.find(item => item.product._id === product._id);
     
@@ -113,12 +126,19 @@ const OrderForm = ({ onSuccess, onCancel }) => {
     return cart.reduce((total, item) => total + (item.quantity * item.price), 0);
   };
 
+<<<<<<< HEAD
   const handlePlaceOrder = () => {
+=======
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     if (cart.length === 0) {
       toast.error('Please add at least one product to your order');
       return;
     }
 
+<<<<<<< HEAD
     const totalAmount = calculateTotal();
     createPaymentIntentMutation.mutate({
       amount: Math.round(totalAmount * 100), // Amount in cents
@@ -127,19 +147,26 @@ const OrderForm = ({ onSuccess, onCancel }) => {
   };
 
   const onPaymentSuccess = (paymentIntent) => {
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     const orderData = {
       items: cart.map(item => ({
         product: item.product._id,
         quantity: item.quantity
       })),
       shippingAddress,
+<<<<<<< HEAD
       notes,
       paymentIntentId: paymentIntent.id
+=======
+      notes
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     };
 
     createOrderMutation.mutate(orderData);
   };
 
+<<<<<<< HEAD
   const onPaymentError = (error) => {
     toast.error(error.message || 'Payment failed');
   };
@@ -168,6 +195,13 @@ const OrderForm = ({ onSuccess, onCancel }) => {
   return (
     <div className="max-h-96 overflow-y-auto">
       <div className="space-y-6">
+=======
+  const availableProducts = products?.data?.filter(p => p.stock > 0) || [];
+
+  return (
+    <div className="max-h-96 overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-6">
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
         {/* Products Selection */}
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-4">Select Products</h3>
@@ -320,16 +354,25 @@ const OrderForm = ({ onSuccess, onCancel }) => {
             Cancel
           </Button>
           <Button 
+<<<<<<< HEAD
             type="button" 
             onClick={handlePlaceOrder}
             loading={createPaymentIntentMutation.isLoading || createOrderMutation.isLoading}
+=======
+            type="submit" 
+            loading={createOrderMutation.isLoading}
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
             disabled={cart.length === 0}
           >
             <ShoppingCart size={20} className="mr-2" />
             Place Order
           </Button>
         </div>
+<<<<<<< HEAD
       </div>
+=======
+      </form>
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     </div>
   );
 };

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 const crypto = require('crypto');
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -17,8 +20,12 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+<<<<<<< HEAD
     minlength: 6,
     select: false
+=======
+    minlength: 6
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   },
   role: {
     type: String,
@@ -39,6 +46,7 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+<<<<<<< HEAD
   },
   isVerified: {
     type: Boolean,
@@ -47,6 +55,9 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
   passwordResetToken: String,
   passwordResetExpires: Date,
+=======
+  }
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 }, {
   timestamps: true
 });
@@ -61,6 +72,7 @@ userSchema.methods.correctPassword = async function(candidatePassword, userPassw
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+<<<<<<< HEAD
 userSchema.methods.createPasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
 
@@ -85,4 +97,6 @@ userSchema.methods.createVerificationToken = function() {
     return verificationToken;
 };
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 module.exports = mongoose.model('User', userSchema);

@@ -1,5 +1,9 @@
 import React from 'react';
+<<<<<<< HEAD
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
+=======
+import { useForm } from 'react-hook-form';
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 import { useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-hot-toast';
 import { productAPI } from '../../api/auth';
@@ -10,7 +14,11 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
   const isEditing = !!product;
   const queryClient = useQueryClient();
   
+<<<<<<< HEAD
   const { register, handleSubmit, formState: { errors }, control, watch } = useForm({
+=======
+  const { register, handleSubmit, formState: { errors } } = useForm({
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     defaultValues: product || {
       name: '',
       description: '',
@@ -18,6 +26,7 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
       stock: 0,
       category: '',
       minOrderQuantity: 1,
+<<<<<<< HEAD
       unit: 'piece',
       hasVariants: false,
       variants: []
@@ -31,6 +40,12 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
 
   const hasVariants = watch("hasVariants");
 
+=======
+      unit: 'piece'
+    }
+  });
+
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   const mutation = useMutation(
     (data) => 
       isEditing 
@@ -49,12 +64,15 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
   );
 
   const onSubmit = (data) => {
+<<<<<<< HEAD
     if (data.hasVariants) {
       delete data.price;
       delete data.stock;
     } else {
       delete data.variants;
     }
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
     mutation.mutate(data);
   };
 
@@ -82,6 +100,7 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
         )}
       </div>
 
+<<<<<<< HEAD
       <div className="flex items-center">
         <input
           type="checkbox"
@@ -176,6 +195,35 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
         </div>
       )}
 
+=======
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Price ($)"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          error={errors.price?.message}
+          {...register('price', { 
+            required: 'Price is required',
+            min: { value: 0, message: 'Price must be positive' }
+          })}
+        />
+
+        <Input
+          label="Stock Quantity"
+          type="number"
+          min="0"
+          placeholder="0"
+          error={errors.stock?.message}
+          {...register('stock', { 
+            required: 'Stock is required',
+            min: { value: 0, message: 'Stock cannot be negative' }
+          })}
+        />
+      </div>
+
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="Category"

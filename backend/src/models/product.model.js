@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+<<<<<<< HEAD
 const variantSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -29,6 +30,8 @@ const variantSchema = new mongoose.Schema({
   }
 });
 
+=======
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -39,6 +42,7 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+<<<<<<< HEAD
   // Price for products without variants
   price: {
     type: Number,
@@ -52,6 +56,18 @@ const productSchema = new mongoose.Schema({
     trim: true,
     unique: true,
     sparse: true
+=======
+  price: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  stock: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
   },
   category: {
     type: String,
@@ -77,6 +93,7 @@ const productSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+<<<<<<< HEAD
   },
   hasVariants: {
     type: Boolean,
@@ -107,4 +124,11 @@ productSchema.virtual('totalStock').get(function() {
 });
 
 
+=======
+  }
+}, {
+  timestamps: true
+});
+
+>>>>>>> 65116c68f261c74f67ceae01e5447223a85fc89c
 module.exports = mongoose.model('Product', productSchema);
