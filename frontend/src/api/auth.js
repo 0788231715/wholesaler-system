@@ -5,6 +5,9 @@ export const authAPI = {
   register: (userData) => api.post('/v1/auth/register', userData),
   getMe: () => api.get('/v1/auth/me'),
   updateDetails: (userData) => api.put('/v1/auth/updatedetails', userData),
+  forgotPassword: (email) => api.post('/v1/auth/forgotpassword', email),
+  resetPassword: (token, passwordData) => api.patch(`/v1/auth/resetpassword/${token}`, passwordData),
+  verifyEmail: (token) => api.get(`/v1/auth/verifyemail/${token}`),
 };
 
 export const userAPI = {

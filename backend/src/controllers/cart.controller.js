@@ -4,9 +4,10 @@ const AppError = require('../utils/appError');
 
 exports.getCart = async (req, res, next) => {
   try {
-    const cart = await Cart.findOne({ user: req.user.id }).populate(
-      'items.product'
-    );
+    const cart = await Cart.findOne({ user: req.user.id }).populate({
+        path: 'items.product',
+        select: 'name images hasVariants variants price stock'
+    }).populate('items.variant');
 
     if (!cart) {
       // If no cart, create one
@@ -31,12 +32,29 @@ exports.getCart = async (req, res, next) => {
 };
 
 exports.addItemToCart = async (req, res, next) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, variantId } = req.body;
 
   try {
     const product = await Product.findById(productId);
     if (!product) {
       return next(new AppError('Product not found', 404));
+    }
+
+    if (product.hasVariants) {
+        if (!variantId) {
+            return next(new AppError('Please select a variant', 400));
+        }
+        const variant = product.variants.id(variantId);
+        if (!variant) {
+            return next(new AppError('Variant not found', 404));
+        }
+        if (variant.stock < quantity) {
+            return next(new AppError('Insufficient stock for this variant', 400));
+        }
+    } else {
+        if (product.stock < quantity) {
+            return next(new AppError('Insufficient stock for this product', 400));
+        }
     }
 
     let cart = await Cart.findOne({ user: req.user.id });
@@ -46,19 +64,22 @@ exports.addItemToCart = async (req, res, next) => {
     }
 
     const itemIndex = cart.items.findIndex(
-      (item) => item.product.toString() === productId
+      (item) => item.product.toString() === productId && (!variantId || item.variant?.toString() === variantId)
     );
 
     if (itemIndex > -1) {
-      // Product exists in cart, update quantity
+      // Product variant exists in cart, update quantity
       cart.items[itemIndex].quantity += quantity;
     } else {
       // Product does not exist in cart, add new item
-      cart.items.push({ product: productId, quantity });
+      cart.items.push({ product: productId, quantity, variant: variantId });
     }
 
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+        path: 'items.product',
+        select: 'name images hasVariants variants price stock'
+    }).populate('items.variant');
 
     res.status(200).json({
       status: 'success',
@@ -72,11 +93,12 @@ exports.addItemToCart = async (req, res, next) => {
 };
 
 exports.updateCartItem = async (req, res, next) => {
-  const { productId, quantity } = req.body;
+  const { itemId, quantity } = req.body;
 
   try {
     if (quantity <= 0) {
-      return exports.removeItemFromCart(req, res, next);
+        req.params.itemId = itemId;
+        return exports.removeItemFromCart(req, res, next);
     }
 
     const cart = await Cart.findOne({ user: req.user.id });
@@ -84,14 +106,15 @@ exports.updateCartItem = async (req, res, next) => {
       return next(new AppError('Cart not found', 404));
     }
 
-    const itemIndex = cart.items.findIndex(
-      (item) => item.product.toString() === productId
-    );
+    const item = cart.items.id(itemId);
 
-    if (itemIndex > -1) {
-      cart.items[itemIndex].quantity = quantity;
+    if (item) {
+      item.quantity = quantity;
       await cart.save();
-      await cart.populate('items.product');
+      await cart.populate({
+        path: 'items.product',
+        select: 'name images hasVariants variants price stock'
+    }).populate('items.variant');
 
       res.status(200).json({
         status: 'success',
@@ -108,7 +131,7 @@ exports.updateCartItem = async (req, res, next) => {
 };
 
 exports.removeItemFromCart = async (req, res, next) => {
-  const { productId } = req.params;
+  const { itemId } = req.params;
 
   try {
     const cart = await Cart.findOne({ user: req.user.id });
@@ -116,12 +139,18 @@ exports.removeItemFromCart = async (req, res, next) => {
       return next(new AppError('Cart not found', 404));
     }
 
-    cart.items = cart.items.filter(
-      (item) => item.product.toString() !== productId
-    );
+    const item = cart.items.id(itemId);
+    if (item) {
+        item.remove();
+    } else {
+        return next(new AppError('Item not in cart', 404));
+    }
 
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+        path: 'items.product',
+        select: 'name images hasVariants variants price stock'
+    }).populate('items.variant');
 
     res.status(200).json({
       status: 'success',

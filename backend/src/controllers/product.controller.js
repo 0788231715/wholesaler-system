@@ -18,25 +18,17 @@ exports.getProducts = async (req, res) => {
 
     let query = { isActive: true };
 
-    // Filter by category
     if (category) query.category = category;
-
-    // Filter by producer
     if (producer) query.producer = producer;
 
-    // Filter by price range
+    // NOTE: Price and stock filtering is not performant on large datasets with variants
+    // and should be implemented with an aggregation pipeline for production environments.
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    // Filter by stock availability
-    if (inStock === 'true') {
-      query.stock = { $gt: 0 };
-    }
-
-    // Search in name and description
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -44,23 +36,22 @@ exports.getProducts = async (req, res) => {
       ];
     }
 
-    // For retailers, only show products with stock > 0
-    if (req.user.role === 'retailer') {
-      query.stock = { $gt: 0 };
-    }
-
-    // For producers, only show their products
     if (req.user.role === 'producer') {
       query.producer = req.user.id;
     }
 
-    const products = await Product.find(query)
+    let products = await Product.find(query)
       .populate('producer', 'name company')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
 
-    const total = await Product.countDocuments(query);
+    // Post-query filtering for stock. This is not ideal for pagination.
+    if (inStock === 'true' || req.user.role === 'retailer') {
+      products = products.filter(p => p.totalStock > 0);
+    }
+
+    const total = await Product.countDocuments(query); // This total count is now inaccurate due to post-filtering.
 
     res.json({
       success: true,
@@ -108,9 +99,17 @@ exports.getProduct = async (req, res) => {
 // @access  Private/Admin/Producer
 exports.createProduct = async (req, res) => {
   try {
-    // Set producer to current user if not admin
     if (req.user.role === 'producer') {
       req.body.producer = req.user.id;
+    }
+
+    const { hasVariants, variants } = req.body;
+
+    if (hasVariants && (!variants || variants.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product with variants must have at least one variant.'
+      });
     }
 
     const product = await Product.create(req.body);
@@ -144,11 +143,19 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    // Check if producer owns the product (unless admin)
     if (req.user.role === 'producer' && product.producer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this product'
+      });
+    }
+    
+    const { hasVariants, variants } = req.body;
+
+    if (hasVariants && (!variants || variants.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product with variants must have at least one variant.'
       });
     }
 
@@ -188,7 +195,6 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
-    // Check if producer owns the product (unless admin)
     if (req.user.role === 'producer' && product.producer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -196,7 +202,6 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
-    // Soft delete by setting isActive to false
     await Product.findByIdAndUpdate(req.params.id, { isActive: false });
 
     res.json({
@@ -216,9 +221,17 @@ exports.deleteProduct = async (req, res) => {
 // @access  Private/Admin/Producer
 exports.updateStock = async (req, res) => {
   try {
-    const { stock } = req.body;
+    const { stock, variantId } = req.body;
+    const { id } = req.params;
 
-    const product = await Product.findById(req.params.id);
+    if (stock === undefined) {
+        return res.status(400).json({
+            success: false,
+            message: 'Stock value is required.'
+        });
+    }
+
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -227,7 +240,6 @@ exports.updateStock = async (req, res) => {
       });
     }
 
-    // Check if producer owns the product (unless admin)
     if (req.user.role === 'producer' && product.producer.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -235,7 +247,25 @@ exports.updateStock = async (req, res) => {
       });
     }
 
-    product.stock = stock;
+    if (product.hasVariants) {
+      if (!variantId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Variant ID is required to update stock for a product with variants.'
+        });
+      }
+      const variant = product.variants.id(variantId);
+      if (!variant) {
+        return res.status(404).json({
+          success: false,
+          message: 'Variant not found'
+        });
+      }
+      variant.stock = stock;
+    } else {
+      product.stock = stock;
+    }
+
     await product.save();
 
     res.json({

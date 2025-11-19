@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-hot-toast';
 import { productAPI } from '../../api/auth';
@@ -10,7 +10,7 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
   const isEditing = !!product;
   const queryClient = useQueryClient();
   
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, control, watch } = useForm({
     defaultValues: product || {
       name: '',
       description: '',
@@ -18,9 +18,18 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
       stock: 0,
       category: '',
       minOrderQuantity: 1,
-      unit: 'piece'
+      unit: 'piece',
+      hasVariants: false,
+      variants: []
     }
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants"
+  });
+
+  const hasVariants = watch("hasVariants");
 
   const mutation = useMutation(
     (data) => 
@@ -40,6 +49,12 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
   );
 
   const onSubmit = (data) => {
+    if (data.hasVariants) {
+      delete data.price;
+      delete data.stock;
+    } else {
+      delete data.variants;
+    }
     mutation.mutate(data);
   };
 
@@ -67,32 +82,99 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="Price ($)"
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="0.00"
-          error={errors.price?.message}
-          {...register('price', { 
-            required: 'Price is required',
-            min: { value: 0, message: 'Price must be positive' }
-          })}
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="hasVariants"
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          {...register('hasVariants')}
         />
-
-        <Input
-          label="Stock Quantity"
-          type="number"
-          min="0"
-          placeholder="0"
-          error={errors.stock?.message}
-          {...register('stock', { 
-            required: 'Stock is required',
-            min: { value: 0, message: 'Stock cannot be negative' }
-          })}
-        />
+        <label htmlFor="hasVariants" className="ml-2 block text-sm text-gray-900">
+          This product has variants
+        </label>
       </div>
+
+      {!hasVariants ? (
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Price ($)"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            error={errors.price?.message}
+            {...register('price', { 
+              required: 'Price is required',
+              min: { value: 0, message: 'Price must be positive' }
+            })}
+          />
+
+          <Input
+            label="Stock Quantity"
+            type="number"
+            min="0"
+            placeholder="0"
+            error={errors.stock?.message}
+            {...register('stock', { 
+              required: 'Stock is required',
+              min: { value: 0, message: 'Stock cannot be negative' }
+            })}
+          />
+        </div>
+      ) : (
+        <div className="space-y-4 rounded-lg border border-gray-200 p-4">
+          <h3 className="text-lg font-medium leading-6 text-gray-900">Variants</h3>
+          {fields.map((item, index) => (
+            <div key={item.id} className="grid grid-cols-12 gap-4 border-t border-gray-200 pt-4">
+              <div className="col-span-11 space-y-2">
+                <Input
+                  label="Variant Name"
+                  placeholder="e.g., Red, Large"
+                  error={errors.variants?.[index]?.name?.message}
+                  {...register(`variants.${index}.name`, { required: 'Variant name is required' })}
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    label="SKU"
+                    placeholder="Variant SKU"
+                    error={errors.variants?.[index]?.sku?.message}
+                    {...register(`variants.${index}.sku`)}
+                  />
+                  <Input
+                    label="Price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    error={errors.variants?.[index]?.price?.message}
+                    {...register(`variants.${index}.price`, { required: 'Price is required', min: 0 })}
+                  />
+                  <Input
+                    label="Stock"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    error={errors.variants?.[index]?.stock?.message}
+                    {...register(`variants.${index}.stock`, { required: 'Stock is required', min: 0 })}
+                  />
+                </div>
+              </div>
+              <div className="col-span-1 flex items-center">
+                <Button type="button" variant="danger" onClick={() => remove(index)} className="mt-6">
+                  X
+                </Button>
+              </div>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => append({ name: '', sku: '', price: 0, stock: 0 })}
+          >
+            Add Variant
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <Input

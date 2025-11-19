@@ -10,11 +10,9 @@ router
   .route('/')
   .get(cartController.getCart)
   .post(cartController.addItemToCart)
-  .patch(cartController.updateCartItem)
   .delete(cartController.clearCart);
 
-router
-  .route('/:productId')
-  .delete(cartController.removeItemFromCart);
+router.patch('/items', cartController.updateCartItem);
+router.delete('/items/:itemId', cartController.removeItemFromCart);
 
 module.exports = router;

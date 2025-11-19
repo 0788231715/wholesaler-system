@@ -1,6 +1,7 @@
 const Order = require('../models/order.model');
 const Product = require('../models/product.model');
 const Invoice = require('../models/invoice.model');
+const sendEmail = require('../utils/email');
 
 // @desc    Create new order
 // @route   POST /api/v1/orders
@@ -37,13 +38,6 @@ exports.createOrder = async (req, res) => {
         });
       }
 
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for product: ${product.name}. Available: ${product.stock}`
-        });
-      }
-
       if (!product.isActive) {
         return res.status(400).json({
           success: false,
@@ -51,13 +45,46 @@ exports.createOrder = async (req, res) => {
         });
       }
 
-      const itemTotal = product.price * item.quantity;
+      let price;
+      let stock;
+      let variant = null;
+
+      if (product.hasVariants) {
+        if (!item.variantId) {
+          return res.status(400).json({
+            success: false,
+            message: `Variant ID is required for product: ${product.name}`
+          });
+        }
+        variant = product.variants.id(item.variantId);
+        if (!variant) {
+          return res.status(404).json({
+            success: false,
+            message: `Variant not found for product: ${product.name}`
+          });
+        }
+        price = variant.price;
+        stock = variant.stock;
+      } else {
+        price = product.price;
+        stock = product.stock;
+      }
+
+      if (stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for product: ${product.name}` + (variant ? ` (${variant.name})` : '')
+        });
+      }
+
+      const itemTotal = price * item.quantity;
       totalAmount += itemTotal;
 
       orderItems.push({
         product: product._id,
+        variant: variant ? variant._id : null,
         quantity: item.quantity,
-        price: product.price,
+        price: price,
         total: itemTotal
       });
     }
@@ -74,15 +101,31 @@ exports.createOrder = async (req, res) => {
     });
 
     // Update product stock
-    for (const item of items) {
-      await Product.findByIdAndUpdate(
-        item.product,
-        { $inc: { stock: -item.quantity } }
-      );
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+      if (product.hasVariants) {
+        const variant = product.variants.id(item.variant);
+        variant.stock -= item.quantity;
+        await product.save();
+      } else {
+        product.stock -= item.quantity;
+        await product.save();
+      }
     }
 
     await order.populate('retailer', 'name company email');
     await order.populate('items.product', 'name description images');
+
+    // Send order confirmation email
+    try {
+      await sendEmail({
+        email: order.retailer.email,
+        subject: `Order Confirmation #${order.orderNumber}`,
+        message: `Hi ${order.retailer.name},\n\nThank you for your order! Your order #${order.orderNumber} has been placed successfully.\n\nTotal Amount: $${order.totalAmount.toFixed(2)}\n\nWe will notify you once your order has been processed.\n\nBest regards,\nThe Wholesaler System Team`
+      });
+    } catch (emailError) {
+      console.error('There was an error sending the order confirmation email:', emailError);
+    }
 
     res.status(201).json({
       success: true,
@@ -163,7 +206,7 @@ exports.getOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('retailer', 'name company email phone address')
-      .populate('items.product', 'name description price images producer')
+      .populate('items.product', 'name description price images producer hasVariants variants')
       .populate('assignedTo', 'name email');
 
     if (!order) {
@@ -200,7 +243,7 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, estimatedDelivery, notes } = req.body;
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate('retailer', 'email name');
 
     if (!order) {
       return res.status(404).json({
@@ -221,8 +264,19 @@ exports.updateOrderStatus = async (req, res) => {
 
     await order.save();
 
-    await order.populate('retailer', 'name company email');
     await order.populate('items.product', 'name price images');
+
+    // Send order status update email
+    try {
+        await sendEmail({
+            email: order.retailer.email,
+            subject: `Your Order #${order.orderNumber} has been ${status}`,
+            message: `Hi ${order.retailer.name},\n\nThe status of your order #${order.orderNumber} has been updated to: ${status}.\n\n` + (status === 'shipped' ? `Estimated delivery: ${new Date(estimatedDelivery).toLocaleDateString()}` : '') + `\n\nBest regards,\nThe Wholesaler System Team`
+        });
+    } catch (emailError) {
+        console.error('There was an error sending the order status update email:', emailError);
+    }
+
 
     res.json({
       success: true,
@@ -278,7 +332,7 @@ exports.assignOrder = async (req, res) => {
 // @access  Private
 exports.cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate('retailer', 'email name');
 
     if (!order) {
       return res.status(404).json({
@@ -296,7 +350,7 @@ exports.cancelOrder = async (req, res) => {
     }
 
     // Only allow cancellation for pending or processing orders
-    if (!['pending', 'processing'].includes(order.status)) {
+    if (!['pending', 'processing'].includes(order..status)) {
       return res.status(400).json({
         success: false,
         message: `Cannot cancel order with status: ${order.status}`
@@ -305,14 +359,30 @@ exports.cancelOrder = async (req, res) => {
 
     // Restore product stock
     for (const item of order.items) {
-      await Product.findByIdAndUpdate(
-        item.product,
-        { $inc: { stock: item.quantity } }
-      );
+        const product = await Product.findById(item.product);
+        if (product.hasVariants) {
+            const variant = product.variants.id(item.variant);
+            variant.stock += item.quantity;
+            await product.save();
+        } else {
+            product.stock += item.quantity;
+            await product.save();
+        }
     }
 
     order.status = 'cancelled';
     await order.save();
+
+    // Send order cancellation email
+    try {
+        await sendEmail({
+            email: order.retailer.email,
+            subject: `Your Order #${order.orderNumber} has been cancelled`,
+            message: `Hi ${order.retailer.name},\n\nYour order #${order.orderNumber} has been successfully cancelled.\n\nIf you did not request this, please contact us immediately.\n\nBest regards,\nThe Wholesaler System Team`
+        });
+    } catch (emailError) {
+        console.error('There was an error sending the order cancellation email:', emailError);
+    }
 
     res.json({
       success: true,

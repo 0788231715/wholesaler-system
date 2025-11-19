@@ -7,18 +7,17 @@ const {
   deleteProduct,
   updateStock
 } = require('../../controllers/product.controller');
-const { protect } = require('../../middlewares/auth.middleware');
+const { protect, optionalAuth } = require('../../middlewares/auth.middleware');
 const { authorize } = require('../../middlewares/role.middleware');
 
 const router = express.Router();
 
-router.use(protect);
+router.get('/', optionalAuth, getProducts);
+router.get('/:id', optionalAuth, getProduct);
 
-router.get('/', getProducts);
-router.get('/:id', getProduct);
-router.post('/', authorize('admin', 'producer'), createProduct);
-router.put('/:id', authorize('admin', 'producer'), updateProduct);
-router.delete('/:id', authorize('admin', 'producer'), deleteProduct);
-router.patch('/:id/stock', authorize('admin', 'producer'), updateStock);
+router.post('/', protect, authorize('admin', 'producer'), createProduct);
+router.put('/:id', protect, authorize('admin', 'producer'), updateProduct);
+router.delete('/:id', protect, authorize('admin', 'producer'), deleteProduct);
+router.patch('/:id/stock', protect, authorize('admin', 'producer'), updateStock);
 
 module.exports = router;
